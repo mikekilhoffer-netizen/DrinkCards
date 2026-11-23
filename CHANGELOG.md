@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.1.1 — 2026-11-23
 - Fixed: a unit the dropdown didn't list (e.g. "cups" from a photo) showed as "oz"
   but saved and printed as the original. Unknown units now show as
   "(not in list)" so what you see is what gets saved.
