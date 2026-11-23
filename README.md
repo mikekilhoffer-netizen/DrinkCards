@@ -21,6 +21,8 @@ npm test           # unit tests
 npm run release    # build installer + stage update files in release/
 ```
 
-Stack: Electron 32, electron-vite, React 18, sql.js.
+Stack: Electron 45, electron-vite 6, React 18, sql.js.
+
+Security model: see [SECURITY.md](SECURITY.md).
 
 Publishing updates: see [docs/PUBLISHING-UPDATES.md](docs/PUBLISHING-UPDATES.md).

@@ -1,3 +1,4 @@
+import { photoSrc } from '../photo'
 import { useState } from 'react'
 import { UNITS, unitLabel, normalizeUnit } from '../units.mjs'
 
@@ -209,7 +210,7 @@ export default function RecipeForm({ recipe, isImported, importCurrent, importTo
           <label className="form-label">Photo (optional)</label>
           <div className="photo-row">
             {photoPath && (
-              <img src={`file://${photoPath}`} alt="Preview" className="photo-preview" />
+              <img src={photoSrc(photoPath)} alt="Preview" className="photo-preview" />
             )}
             <div className="photo-buttons">
               <button className="btn btn-secondary" onClick={handlePhotoSelect}>

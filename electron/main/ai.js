@@ -3,6 +3,7 @@ import { readFileSync, statSync } from 'fs'
 import { extname } from 'path'
 import { getApiKey } from './settings.js'
 import { UNITS, normalizeUnit } from '../../src/units.mjs'
+import { sanitizeImportedRecipes } from './safety.mjs'
 
 const MAX_BYTES = 5 * 1024 * 1024 // 5 MB — Anthropic API limit
 
@@ -76,9 +77,7 @@ export async function importRecipeFromPhoto(imagePath) {
     throw new Error(`PARSE_ERROR:${text.substring(0, 300)}`)
   }
 
-  // Always return an array; map unit spellings ("cups", "ounces") onto the form's list
-  const recipes = Array.isArray(parsed) ? parsed : [parsed]
-  const fixUnits = (items) =>
-    Array.isArray(items) ? items.map((i) => ({ ...i, unit: normalizeUnit(i?.unit) })) : []
-  return recipes.map((r) => ({ ...r, ingredients: fixUnits(r.ingredients), garnishes: fixUnits(r.garnishes) }))
+  // Whitelist fields, coerce to bounded strings, and map unit spellings onto
+  // the form's list. See sanitizeImportedRecipes for why this matters.
+  return sanitizeImportedRecipes(parsed, normalizeUnit)
 }

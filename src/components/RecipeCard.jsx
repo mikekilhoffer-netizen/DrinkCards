@@ -1,3 +1,4 @@
+import { photoSrc } from '../photo'
 export default function RecipeCard({ recipe }) {
   const { name, glass, method, photo_path, note, ingredients = [], garnishes = [] } = recipe
 
@@ -17,7 +18,7 @@ export default function RecipeCard({ recipe }) {
           <div className="card-left">
             <div className="card-photo">
               {photo_path ? (
-                <img src={`file://${photo_path}`} alt={name} />
+                <img src={photoSrc(photo_path)} alt={name} />
               ) : (
                 <div className="card-no-photo">No photo</div>
               )}

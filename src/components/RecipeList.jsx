@@ -1,3 +1,4 @@
+import { photoSrc } from '../photo'
 import { useState, useMemo } from 'react'
 
 export default function RecipeList({ recipes, loading, onNew, onImport, onView, onEdit, onDelete, onSettings, onPrint, onAbout }) {
@@ -145,7 +146,7 @@ function RecipeThumb({ recipe, onView, onEdit, onDelete }) {
     <div className="recipe-thumb" onClick={() => onView(recipe)}>
       <div className="thumb-photo">
         {recipe.photo_path
-          ? <img src={`file://${recipe.photo_path}`} alt={recipe.name} />
+          ? <img src={photoSrc(recipe.photo_path)} alt={recipe.name} />
           : <div className="thumb-no-photo">No photo</div>
         }
       </div>

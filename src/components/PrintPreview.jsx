@@ -1,3 +1,4 @@
+import { photoSrc } from '../photo'
 import { useState, useMemo } from 'react'
 
 // A single recipe card block — will not split across pages
@@ -16,7 +17,7 @@ function PrintRecipeBlock({ recipe, showCategoryHeader }) {
           <div className="print-card-left">
             <div className="print-card-photo">
               {photo_path
-                ? <img src={`file://${photo_path}`} alt={name} />
+                ? <img src={photoSrc(photo_path)} alt={name} />
                 : <div className="print-no-photo">No photo</div>
               }
             </div>

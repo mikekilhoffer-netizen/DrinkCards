@@ -21,7 +21,13 @@ function UpdatesSection() {
   const check = async () => {
     setBusy(true)
     setStatus(null)
-    await window.api.updates.setFeed(feed)
+    try {
+      await window.api.updates.setFeed(feed)
+    } catch (err) {
+      setBusy(false)
+      const msg = String(err?.message ?? err).replace(/^Error invoking remote method '[^']+': (Error: )?/, '')
+      return setStatus({ kind: 'error', text: msg })
+    }
     const res = await window.api.updates.check()
     setBusy(false)
     if (!res.ok) return setStatus({ kind: 'error', text: res.error })

@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import { electronAPI } from '@electron-toolkit/preload'
 
+// The page gets exactly these functions and nothing else - no raw
+// ipcRenderer, no process info. Each maps to one handler in the main process.
 const api = {
   recipe: {
     getAll: () => ipcRenderer.invoke('recipe:getAll'),
@@ -35,14 +36,4 @@ const api = {
   }
 }
 
-if (process.contextIsolated) {
-  try {
-    contextBridge.exposeInMainWorld('electron', electronAPI)
-    contextBridge.exposeInMainWorld('api', api)
-  } catch (error) {
-    console.error(error)
-  }
-} else {
-  window.electron = electronAPI
-  window.api = api
-}
+contextBridge.exposeInMainWorld('api', api)
