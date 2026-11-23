@@ -1,6 +1,11 @@
+import { useEffect, useState } from 'react'
+
 const DONATION_URL = 'https://buy.stripe.com/4gM4gA2si1ucaqLem4gA800'
 
 export default function About({ onClose }) {
+  const [version, setVersion] = useState('')
+  useEffect(() => { window.api.app.getVersion().then(setVersion) }, [])
+
   const openDonation = () => {
     window.open(DONATION_URL, '_blank')
   }
@@ -15,7 +20,7 @@ export default function About({ onClose }) {
         </div>
 
         <h2 className="about-title">Drink Recipe Book Creator</h2>
-        <p className="about-version">Version 1.0</p>
+        <p className="about-version">Version {version}</p>
 
         <p className="about-body">
           Developed by <strong>Michael Kilhoffer</strong>.

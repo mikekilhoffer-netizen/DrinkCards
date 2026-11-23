@@ -5,6 +5,7 @@ import RecipeCard from './components/RecipeCard'
 import Settings from './components/Settings'
 import PrintPreview from './components/PrintPreview'
 import About from './components/About'
+import UpdateBanner from './components/UpdateBanner'
 
 export default function App() {
   const [view, setView] = useState('list') // 'list'|'create'|'edit'|'detail'|'print'
@@ -135,6 +136,8 @@ export default function App() {
 
   return (
     <>
+      {view !== 'print' && <UpdateBanner />}
+
       {importing && (
         <div className="import-overlay">
           <div className="import-spinner">

@@ -23,6 +23,25 @@ export function getApiKey() {
   return load().anthropicApiKey || ''
 }
 
+// An explicitly saved location wins, including an empty one - someone who
+// cleared the box is saying "don't check", and the default shouldn't override that.
+export function getUpdateFeed(defaultFeed) {
+  const value = load().updateFeedUrl
+  return typeof value === 'string' ? value : defaultFeed
+}
+
+export function setUpdateFeed(url) {
+  const settings = load()
+  settings.updateFeedUrl = String(url ?? '').trim()
+  save(settings)
+}
+
+export function resetUpdateFeed() {
+  const settings = load()
+  delete settings.updateFeedUrl
+  save(settings)
+}
+
 export function setApiKey(key) {
   const settings = load()
   settings.anthropicApiKey = key.trim()

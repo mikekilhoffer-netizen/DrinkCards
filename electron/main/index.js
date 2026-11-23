@@ -9,8 +9,9 @@ import {
   updateRecipe,
   deleteRecipe
 } from './database.js'
-import { getApiKey, setApiKey } from './settings.js'
+import { getApiKey, setApiKey, getUpdateFeed, setUpdateFeed, resetUpdateFeed } from './settings.js'
 import { importRecipeFromPhoto } from './ai.js'
+import { checkForUpdate, DEFAULT_UPDATE_FEED } from './updates.js'
 
 function createWindow() {
   const mainWindow = new BrowserWindow({
@@ -78,6 +79,35 @@ app.whenReady().then(async () => {
   // Settings
   ipcMain.handle('settings:getApiKey', () => getApiKey())
   ipcMain.handle('settings:setApiKey', (_, key) => setApiKey(key))
+
+  // App info + updates. Errors come back as { ok:false } rather than throwing,
+  // so the launch check can fail silently (offline, host down) without noise.
+  ipcMain.handle('app:getVersion', () => app.getVersion())
+  ipcMain.handle('updates:check', async () => {
+    try {
+      return { ok: true, data: await checkForUpdate() }
+    } catch (err) {
+      return { ok: false, error: err.message }
+    }
+  })
+  ipcMain.handle('updates:getFeed', () => ({
+    feed: getUpdateFeed(DEFAULT_UPDATE_FEED),
+    defaultFeed: DEFAULT_UPDATE_FEED
+  }))
+  ipcMain.handle('updates:setFeed', (_, url) => setUpdateFeed(url))
+  ipcMain.handle('updates:resetFeed', () => resetUpdateFeed())
+  // Only ever opens the address the check itself produced (https URL or a
+  // file path on a share) - never an arbitrary string from the page.
+  ipcMain.handle('updates:openDownload', async () => {
+    const result = await checkForUpdate()
+    if (!result.downloadUrl) throw new Error('The update has no installer listed.')
+    if (/^https?:\/\//i.test(result.downloadUrl)) {
+      await shell.openExternal(result.downloadUrl)
+    } else {
+      const err = await shell.openPath(result.downloadUrl)
+      if (err) throw new Error(err)
+    }
+  })
 
   // AI import
   ipcMain.handle('ai:importFromPhoto', async (_, imagePath) => {

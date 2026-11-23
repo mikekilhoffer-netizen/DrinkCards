@@ -1,13 +1,15 @@
 {
   "name": "drinkcards",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Drink Recipe Card Manager",
   "main": "out/main/index.js",
   "scripts": {
     "dev": "electron-vite dev",
     "build": "electron-vite build",
-    "dist": "electron-vite build && set CSC_IDENTITY_AUTO_DISCOVERY=false&& electron-builder",
-    "pack": "electron-vite build && set CSC_IDENTITY_AUTO_DISCOVERY=false&& electron-builder --dir"
+    "dist": "npm test && electron-vite build && set CSC_IDENTITY_AUTO_DISCOVERY=false&& electron-builder --win nsis --publish never",
+    "pack": "electron-vite build && set CSC_IDENTITY_AUTO_DISCOVERY=false&& electron-builder --dir",
+    "release": "npm run dist && node scripts/stage-release.mjs",
+    "test": "node --test \"tests/**/*.test.mjs\""
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.105.0",
@@ -27,10 +29,10 @@
   "build": {
     "appId": "com.drinkcards",
     "productName": "Drink Cards",
-    "copyright": "Copyright © 2024",
+    "copyright": "Copyright © 2026 Mike Kilhoffer",
     "directories": {
       "buildResources": "resources",
-      "output": "release"
+      "output": "dist-desktop"
     },
     "files": [
       "out/**/*",
@@ -38,7 +40,12 @@
     ],
     "win": {
       "target": [
-        { "target": "nsis", "arch": ["x64"] }
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
       ],
       "artifactName": "${productName}-Setup-${version}.exe"
     },
@@ -46,7 +53,17 @@
       "oneClick": false,
       "perMachine": false,
       "allowToChangeInstallationDirectory": true,
-      "deleteAppDataOnUninstall": false
-    }
-  }
+      "deleteAppDataOnUninstall": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Drink Cards"
+    },
+    "publish": [
+      {
+        "provider": "generic",
+        "url": "https://updates.guestflowweather.com/drinkcards/"
+      }
+    ]
+  },
+  "author": "Mike Kilhoffer"
 }

@@ -606,6 +606,47 @@ body {
   padding-top: 4px;
   border-top: 1px solid #eee;
 }
+.settings-panel { max-height: 92vh; display: flex; flex-direction: column; }
+.settings-body { overflow-y: auto; }
+.settings-section + .settings-section {
+  border-top: 1px solid #eee;
+  padding-top: 14px;
+}
+.update-check-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+/* ============================================================
+   Update banner (shown on launch when a newer version is published)
+   ============================================================ */
+.update-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 20px;
+  background: #e8f7fd;
+  border-bottom: 1px solid #00AEEF;
+  font-size: 13px;
+  color: #034a66;
+}
+.update-banner-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.update-banner-error { color: #d93025; }
+.update-banner-dismiss {
+  background: none;
+  border: none;
+  color: #034a66;
+  cursor: pointer;
+  font-size: 13px;
+  text-decoration: underline;
+}
 
 /* ============================================================
    About modal

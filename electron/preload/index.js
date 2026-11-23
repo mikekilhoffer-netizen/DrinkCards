@@ -22,6 +22,16 @@ const api = {
   },
   print: {
     job: (options) => ipcRenderer.invoke('print:job', options)
+  },
+  app: {
+    getVersion: () => ipcRenderer.invoke('app:getVersion')
+  },
+  updates: {
+    check: () => ipcRenderer.invoke('updates:check'),
+    getFeed: () => ipcRenderer.invoke('updates:getFeed'),
+    setFeed: (url) => ipcRenderer.invoke('updates:setFeed', url),
+    resetFeed: () => ipcRenderer.invoke('updates:resetFeed'),
+    openDownload: () => ipcRenderer.invoke('updates:openDownload')
   }
 }
 
