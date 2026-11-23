@@ -25,7 +25,7 @@ const ALIASES = {
   shot: 'shot', shots: 'shot',
   dash: 'dash', dashes: 'dash',
   drop: 'drop', drops: 'drop',
-  splash: 'splash', splashes: 'splash',
+  splash: 'splash', splashes: 'splash', squirt: 'splash', squirts: 'splash',
   rinse: 'rinse', float: 'float', top: 'top', 'top with': 'top',
   part: 'part', parts: 'part',
   pinch: 'pinch', pinches: 'pinch',

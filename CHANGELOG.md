@@ -6,7 +6,7 @@
   "(not in list)" so what you see is what gets saved.
 - Added units: cup, pt, qt, L, shot, top, part, and (none).
 - Photo import maps spellings like "cups", "ounces", "Tbsp.", "z" onto the list.
-- Existing recipes: recognized units are corrected on first launch (e.g. "z" → "oz");
+- Existing recipes: recognized units are corrected on first launch (e.g. "z" → "oz", "squirt" → "splash");
   a backup of the database is saved first as recipes.before-unit-fix-<date>.db.
 
 ## 1.1.0 — 2026-11-22

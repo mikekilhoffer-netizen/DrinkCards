@@ -16,6 +16,7 @@ test('photo spellings map onto the dropdown units', () => {
   assert.equal(normalizeUnit('t'), 'tsp')
   assert.equal(normalizeUnit('teaspoons'), 'tsp')
   assert.equal(normalizeUnit('dashes'), 'dash')
+  assert.equal(normalizeUnit('squirt'), 'splash')
   assert.equal(normalizeUnit('each'), 'ea.')
   assert.equal(normalizeUnit('ea'), 'ea.')
   assert.equal(normalizeUnit('bar spoon'), 'barspoon')
