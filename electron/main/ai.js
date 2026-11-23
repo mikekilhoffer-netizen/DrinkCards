@@ -2,6 +2,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { readFileSync, statSync } from 'fs'
 import { extname } from 'path'
 import { getApiKey } from './settings.js'
+import { UNITS, normalizeUnit } from '../../src/units.mjs'
 
 const MAX_BYTES = 5 * 1024 * 1024 // 5 MB — Anthropic API limit
 
@@ -28,7 +29,9 @@ Return ONLY a valid JSON array containing every recipe found, each with this str
 Rules:
 - Always return a JSON array, even when there is only one recipe
 - amounts should be numbers as strings ("1.50", "0.75", "4")
-- unit should be the abbreviation as written (oz, ea., dash, tsp, etc.)
+- unit must be exactly one of: ${UNITS.filter(Boolean).map((u) => `"${u}"`).join(', ')}, or "" for no unit
+  (e.g. "1.5 cups" → amount "1.50", unit "cup"; "Top with soda" → amount "", unit "top")
+- keep the amount and unit as written on the card; do not convert between units
 - if a field is missing, use "" for text fields or [] for arrays
 - return ONLY the JSON array — no explanation, no markdown, no code fences`
 
@@ -73,6 +76,9 @@ export async function importRecipeFromPhoto(imagePath) {
     throw new Error(`PARSE_ERROR:${text.substring(0, 300)}`)
   }
 
-  // Always return an array
-  return Array.isArray(parsed) ? parsed : [parsed]
+  // Always return an array; map unit spellings ("cups", "ounces") onto the form's list
+  const recipes = Array.isArray(parsed) ? parsed : [parsed]
+  const fixUnits = (items) =>
+    Array.isArray(items) ? items.map((i) => ({ ...i, unit: normalizeUnit(i?.unit) })) : []
+  return recipes.map((r) => ({ ...r, ingredients: fixUnits(r.ingredients), garnishes: fixUnits(r.garnishes) }))
 }

@@ -1,6 +1,7 @@
 import { app } from 'electron'
 import { join } from 'path'
-import { existsSync, readFileSync, writeFileSync } from 'fs'
+import { existsSync, readFileSync, writeFileSync, copyFileSync } from 'fs'
+import { UNITS, normalizeUnit } from '../../src/units.mjs'
 
 let db = null
 let dbPath = null
@@ -43,6 +44,7 @@ export async function initDatabase() {
     const fileBuffer = readFileSync(dbPath)
     db = new SQL.Database(fileBuffer)
     runMigrations()
+    normalizeStoredUnits()
   } else {
     db = new SQL.Database()
     db.run(SCHEMA)
@@ -59,6 +61,27 @@ function runMigrations() {
       // Column already exists — safe to ignore
     }
   }
+}
+
+// Older versions (and AI imports) stored units the dropdown doesn't list -
+// "z", "cups", "ounces". The form displayed those as "oz" while saving the
+// original, and the cards printed the original. Map every spelling we
+// recognize onto the dropdown's unit. Unknown units are left alone; the form
+// now shows them as "(not in list)". Backs the file up once before changing it.
+function normalizeStoredUnits() {
+  const fixes = query(`SELECT DISTINCT unit FROM ingredients`)
+    .map((r) => r.unit)
+    .filter((u) => u !== normalizeUnit(u) && UNITS.includes(normalizeUnit(u)))
+  if (!fixes.length) return
+
+  const stamp = new Date().toISOString().slice(0, 10)
+  const backup = join(app.getPath('userData'), `recipes.before-unit-fix-${stamp}.db`)
+  if (!existsSync(backup)) copyFileSync(dbPath, backup)
+
+  for (const unit of fixes) {
+    run(`UPDATE ingredients SET unit = ? WHERE unit IS ?`, [normalizeUnit(unit), unit])
+  }
+  persist()
 }
 
 function persist() {
@@ -100,7 +123,7 @@ function saveItems(recipeId, items, type) {
   items.forEach((item, i) => {
     run(
       `INSERT INTO ingredients (recipe_id, amount, unit, name, sort_order, type) VALUES (?, ?, ?, ?, ?, ?)`,
-      [recipeId, item.amount || '', item.unit || '', item.name || '', i, type]
+      [recipeId, item.amount || '', normalizeUnit(item.unit), item.name || '', i, type]
     )
   })
 }

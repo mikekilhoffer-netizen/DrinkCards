@@ -1,8 +1,12 @@
 import { useState } from 'react'
-
-const UNITS = ['oz', 'ea.', 'dash', 'tsp', 'tbsp', 'ml', 'cl', 'barspoon', 'rinse', 'float', 'splash', 'drop', 'pinch']
+import { UNITS, unitLabel, normalizeUnit } from '../units.mjs'
 
 const emptyItem = () => ({ amount: '', unit: 'oz', name: '' })
+
+// Normalize on the way in, so "cups" from a photo becomes "cup", and older
+// saved recipes get the same treatment when opened for editing.
+const loadItems = (items) =>
+  items?.length ? items.map((i) => ({ ...i, unit: normalizeUnit(i.unit) })) : [emptyItem()]
 
 export default function RecipeForm({ recipe, isImported, importCurrent, importTotal, existingCategories = [], onSave, onSkip, onCancel }) {
   const [name, setName] = useState(recipe?.name || '')
@@ -11,12 +15,8 @@ export default function RecipeForm({ recipe, isImported, importCurrent, importTo
   const [method, setMethod] = useState(recipe?.method || '')
   const [note, setNote] = useState(recipe?.note || '')
   const [photoPath, setPhotoPath] = useState(recipe?.photo_path || '')
-  const [ingredients, setIngredients] = useState(
-    recipe?.ingredients?.length ? recipe.ingredients.map((i) => ({ ...i })) : [emptyItem()]
-  )
-  const [garnishes, setGarnishes] = useState(
-    recipe?.garnishes?.length ? recipe.garnishes.map((i) => ({ ...i })) : [emptyItem()]
-  )
+  const [ingredients, setIngredients] = useState(() => loadItems(recipe?.ingredients))
+  const [garnishes, setGarnishes] = useState(() => loadItems(recipe?.garnishes))
 
   const updateItem = (list, setList, index, field, value) => {
     const updated = [...list]
@@ -74,9 +74,16 @@ export default function RecipeForm({ recipe, isImported, importCurrent, importTo
               value={item.unit}
               onChange={(e) => updateItem(list, setList, i, 'unit', e.target.value)}
             >
+              {/* A unit outside the list still gets its own option. Without it the
+                  browser shows the first option ("oz") while the row still holds
+                  the other value, so choosing "oz" changed nothing and the
+                  unseen unit was saved. */}
+              {!UNITS.includes(item.unit) && (
+                <option value={item.unit}>{item.unit} (not in list)</option>
+              )}
               {UNITS.map((u) => (
                 <option key={u} value={u}>
-                  {u}
+                  {unitLabel(u)}
                 </option>
               ))}
             </select>
