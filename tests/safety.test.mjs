@@ -2,7 +2,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import {
   isSafeLocalImagePath, isAllowedExternalUrl, isAllowedFeed,
-  isSafeInstallerName, sanitizeImportedRecipes
+  isSafeInstallerName, sanitizeImportedRecipes, sanitizeRecipeInput, findDangerousSwitch
 } from '../electron/main/safety.mjs'
 import { normalizeUnit } from '../src/units.mjs'
 
@@ -73,4 +73,36 @@ test('AI output: only recipe fields survive, as bounded strings', () => {
   assert.equal(sanitizeImportedRecipes(Array(500).fill({ name: 'a' }), normalizeUnit).length, 50)
   // a single object instead of an array still works
   assert.equal(sanitizeImportedRecipes({ name: 'Solo' }, normalizeUnit)[0].name, 'Solo')
+})
+
+test('recipes from the page: known fields only, strings only', () => {
+  const r = sanitizeRecipeInput({
+    name: "x'); DROP TABLE recipes;--", category: { evil: 1 }, glass: 12, id: 99, created_at: 'x',
+    photo_path: '\\\\attacker.example\\x.jpg',
+    ingredients: [{ amount: 1, unit: 'cups', name: { toString: 'x' } }, null, 'junk'],
+    garnishes: 'not an array'
+  }, normalizeUnit)
+  assert.deepEqual(Object.keys(r).sort(), ['category', 'garnishes', 'glass', 'ingredients', 'method', 'name', 'note', 'photo_path'])
+  assert.equal(r.name, "x'); DROP TABLE recipes;--") // stored as text, never executed (queries are parameterized)
+  assert.equal(r.category, '')
+  assert.equal(r.glass, '12')
+  assert.equal(r.photo_path, '')
+  assert.deepEqual(r.ingredients[0], { amount: '1', unit: 'cup', name: '' })
+  assert.deepEqual(r.garnishes, [])
+  assert.deepEqual(sanitizeRecipeInput(null, normalizeUnit).ingredients, [])
+  assert.deepEqual(sanitizeRecipeInput([1, 2], normalizeUnit).name, '')
+})
+
+test('dangerous command-line switches are spotted in any spelling', () => {
+  const exe = 'C:\\Programs\\Drink Cards.exe'
+  for (const argv of [
+    [exe, '--remote-debugging-port=9222'], [exe, '--REMOTE-DEBUGGING-PORT=1'], [exe, '-remote-debugging-port=1'],
+    [exe, '--remote-debugging-pipe'], [exe, '--inspect'], [exe, '--inspect-brk=9229'], [exe, '--no-sandbox'],
+    [exe, '--disable-web-security'], [exe, '--js-flags=--allow-natives-syntax'], [exe, 'ok', '--proxy-server=x:1'],
+    [exe, '/remote-debugging-port=9222'], [exe, '/NO-SANDBOX']
+  ]) assert.ok(findDangerousSwitch(argv), argv.join(' '))
+  assert.equal(findDangerousSwitch([exe]), null)
+  assert.equal(findDangerousSwitch([exe, '--user-data-dir=C:\\x', '--lang=en-US']), null)
+  // the exe path itself is never treated as a switch
+  assert.equal(findDangerousSwitch(['--no-sandbox']), null)
 })

@@ -66,8 +66,8 @@ export default function App() {
 
   const handleImport = async () => {
     setImportError(null)
-    const key = await window.api.settings.getApiKey()
-    if (!key) {
+    const { hasKey } = await window.api.settings.getApiKeyStatus()
+    if (!hasKey) {
       setShowSettings(true)
       setImportError('Please add your Anthropic API key in Settings first, then try Import again.')
       return

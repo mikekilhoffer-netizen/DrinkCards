@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.1.3 — 2026-11-23
+Second security pass:
+- The API key never reaches the app window: Settings shows only "a key is
+  saved, ending in …1234", with Replace and Remove. Page script has nothing
+  to steal.
+- Changing the update location now needs a click in a Windows dialog the page
+  can't press (it could otherwise be used to smuggle data out, or to point
+  at a network share that leaks the Windows login).
+- The app refuses to start with remote-control or protection-stripping
+  options (--remote-debugging-port, --inspect, --no-sandbox, ...), in any
+  spelling including /option.
+- No DevTools or menu bar in the shipped app; the page can't start downloads
+  or print without the print dialog.
+- Every internal request is checked to come from the app's own page; recipe
+  saves are all-or-nothing and only accept known fields.
+
 ## 1.1.2 — 2026-11-23
 Security hardening (no change to how the app looks or works):
 - Electron 32 → 45: picks up two years of Chromium and Electron security fixes.

@@ -104,6 +104,20 @@ function run(sql, params = []) {
   db.run(sql, params)
 }
 
+// All-or-nothing: a failure part-way through a save leaves the database as
+// it was, rather than a recipe with half its ingredients.
+function transaction(fn) {
+  db.run('BEGIN')
+  try {
+    const result = fn()
+    db.run('COMMIT')
+    return result
+  } catch (err) {
+    db.run('ROLLBACK')
+    throw err
+  }
+}
+
 function hydrateRecipe(recipe) {
   return {
     ...recipe,
@@ -141,32 +155,39 @@ export function getRecipeById(id) {
 
 export function createRecipe(data) {
   const { name, category, glass, method, photo_path, note, ingredients = [], garnishes = [] } = data
-  run(
-    `INSERT INTO recipes (name, category, glass, method, photo_path, note) VALUES (?, ?, ?, ?, ?, ?)`,
-    [name, category || '', glass || '', method || '', photo_path || '', note || '']
-  )
-  const [{ id }] = query(`SELECT last_insert_rowid() as id`)
-  saveItems(id, ingredients, 'ingredient')
-  saveItems(id, garnishes, 'garnish')
+  const id = transaction(() => {
+    run(
+      `INSERT INTO recipes (name, category, glass, method, photo_path, note) VALUES (?, ?, ?, ?, ?, ?)`,
+      [name, category || '', glass || '', method || '', photo_path || '', note || '']
+    )
+    const [{ id }] = query(`SELECT last_insert_rowid() as id`)
+    saveItems(id, ingredients, 'ingredient')
+    saveItems(id, garnishes, 'garnish')
+    return id
+  })
   persist()
   return getRecipeById(id)
 }
 
 export function updateRecipe(id, data) {
   const { name, category, glass, method, photo_path, note, ingredients = [], garnishes = [] } = data
-  run(
-    `UPDATE recipes SET name=?, category=?, glass=?, method=?, photo_path=?, note=?, updated_at=CURRENT_TIMESTAMP WHERE id=?`,
-    [name, category || '', glass || '', method || '', photo_path || '', note || '', id]
-  )
-  saveItems(id, ingredients, 'ingredient')
-  saveItems(id, garnishes, 'garnish')
+  transaction(() => {
+    run(
+      `UPDATE recipes SET name=?, category=?, glass=?, method=?, photo_path=?, note=?, updated_at=CURRENT_TIMESTAMP WHERE id=?`,
+      [name, category || '', glass || '', method || '', photo_path || '', note || '', id]
+    )
+    saveItems(id, ingredients, 'ingredient')
+    saveItems(id, garnishes, 'garnish')
+  })
   persist()
   return getRecipeById(id)
 }
 
 export function deleteRecipe(id) {
-  run(`DELETE FROM ingredients WHERE recipe_id = ?`, [id])
-  run(`DELETE FROM recipes WHERE id = ?`, [id])
+  transaction(() => {
+    run(`DELETE FROM ingredients WHERE recipe_id = ?`, [id])
+    run(`DELETE FROM recipes WHERE id = ?`, [id])
+  })
   persist()
   return { success: true }
 }

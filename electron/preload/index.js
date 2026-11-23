@@ -15,7 +15,7 @@ const api = {
     openRecipePhoto: () => ipcRenderer.invoke('dialog:openRecipePhoto')
   },
   settings: {
-    getApiKey: () => ipcRenderer.invoke('settings:getApiKey'),
+    getApiKeyStatus: () => ipcRenderer.invoke('settings:getApiKeyStatus'),
     setApiKey: (key) => ipcRenderer.invoke('settings:setApiKey', key)
   },
   ai: {

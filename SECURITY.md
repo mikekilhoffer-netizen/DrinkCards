@@ -17,6 +17,12 @@ change breaks one of these, it needs a good reason.
   keep 2FA on both.
 
 ## Window
+- The page never holds the API key (only "has key" + last 4 characters).
+- IPC handlers accept calls only from the app's own top frame.
+- Changing the update location requires a native confirmation dialog.
+- Downloads are blocked; printing always shows the print dialog.
+- Packaged app: no DevTools, no menu; refuses debugging / sandbox-stripping
+  command-line switches (see DANGEROUS_SWITCHES in safety.mjs).
 - Served from `app://drinkcards/` (never `file://`), with a CSP header.
 - `sandbox: true`, `contextIsolation: true`, no Node in the page; preload
   exposes only `window.api`.
@@ -32,7 +38,17 @@ NODE_OPTIONS, no --inspect, asar integrity enforced, file:// privileges off.
 ## Secrets
 The Anthropic API key is encrypted with Windows DPAPI (`safeStorage`).
 
+## Outside the app
+- The update host (R2 bucket, custom domain) refuses unauthenticated writes.
+  Whoever holds the Cloudflare login can publish to every installed copy:
+  that login is the most valuable thing to protect. Don't leave a long-lived
+  wrangler login on the build machine; use 2FA on Cloudflare and GitHub.
+- Installers are unsigned, so users can't tell a real one from a fake by
+  looking. Code signing is the fix.
+
 ## Checking
 `npm test` covers the validation rules. Before a release that touches any of
 the above, also run the packaged app against the in-page attack probes
-(see git history for the 1.1.2 security pass).
+(see git history for the 1.1.2 and 1.1.3 security passes). To drive the
+shipped code with a debug port, launch the dev Electron binary against the
+built app.asar - the packaged exe refuses debug switches by design.

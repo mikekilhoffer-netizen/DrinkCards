@@ -25,6 +25,8 @@ function UpdatesSection() {
       await window.api.updates.setFeed(feed)
     } catch (err) {
       setBusy(false)
+      // Cancelled or refused: show what's actually saved again.
+      window.api.updates.getFeed().then(({ feed }) => setFeed(feed))
       const msg = String(err?.message ?? err).replace(/^Error invoking remote method '[^']+': (Error: )?/, '')
       return setStatus({ kind: 'error', text: msg })
     }
@@ -88,21 +90,30 @@ function UpdatesSection() {
 }
 
 export default function Settings({ onClose, errorMessage }) {
+  // The saved key never comes back to this screen - only whether there is
+  // one and its last four characters. Typing here replaces it.
   const [apiKey, setApiKey] = useState('')
+  const [status, setKeyStatus] = useState({ hasKey: false, hint: '' })
   const [saved, setSaved] = useState(false)
   const [masked, setMasked] = useState(true)
 
-  useEffect(() => {
-    window.api.settings.getApiKey().then((key) => {
-      if (key) setApiKey(key)
-    })
-  }, [])
+  const refreshStatus = () => window.api.settings.getApiKeyStatus().then(setKeyStatus)
+  useEffect(() => { refreshStatus() }, [])
 
   const handleSave = async (e) => {
     e.preventDefault()
+    if (!apiKey.trim()) return
     await window.api.settings.setApiKey(apiKey)
+    setApiKey('')
+    await refreshStatus()
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
+  }
+
+  const handleRemove = async () => {
+    await window.api.settings.setApiKey('')
+    setApiKey('')
+    await refreshStatus()
   }
 
   return (
@@ -126,11 +137,16 @@ export default function Settings({ onClose, errorMessage }) {
               Get a key at <strong>console.anthropic.com</strong>.
             </p>
             <label className="form-label">Anthropic API Key</label>
+            <p className="settings-note">
+              {status.hasKey
+                ? <>A key is saved (ending in <strong>&hellip;{status.hint}</strong>). Paste a new one below to replace it.</>
+                : 'No key saved yet.'}
+            </p>
             <div className="api-key-row">
               <input
                 type={masked ? 'password' : 'text'}
                 className="input input-full"
-                placeholder="sk-ant-..."
+                placeholder={status.hasKey ? 'Paste a new key to replace the saved one' : 'sk-ant-...'}
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
                 spellCheck={false}
@@ -143,6 +159,11 @@ export default function Settings({ onClose, errorMessage }) {
               >
                 {masked ? 'Show' : 'Hide'}
               </button>
+              {status.hasKey && (
+                <button type="button" className="btn btn-secondary" onClick={handleRemove}>
+                  Remove
+                </button>
+              )}
             </div>
             <p className="settings-note">
               Your key is stored only on this computer and sent only to Anthropic when scanning a photo.

@@ -66,6 +66,46 @@ function sanitizeItems(items, normalizeUnit) {
   }))
 }
 
+// A recipe arriving from the page over IPC. Same idea as the AI reply: only
+// known fields, as bounded strings, so bad input can't half-write a recipe
+// or put objects where the database expects text.
+export function sanitizeRecipeInput(data, normalizeUnit) {
+  const d = data && typeof data === 'object' && !Array.isArray(data) ? data : {}
+  return {
+    name: str(d.name, 200),
+    category: str(d.category, 100),
+    glass: str(d.glass, 200),
+    method: str(d.method, 500),
+    note: str(d.note, 2000),
+    photo_path: isSafeLocalImagePath(d.photo_path) ? d.photo_path : '',
+    ingredients: sanitizeItems(d.ingredients, normalizeUnit),
+    garnishes: sanitizeItems(d.garnishes, normalizeUnit)
+  }
+}
+
+// Command-line switches that open the app to remote control or strip its
+// protections. Anything running as the user could add these to a shortcut;
+// the packaged app refuses to start with them.
+export const DANGEROUS_SWITCHES = [
+  'remote-debugging-port', 'remote-debugging-pipe', 'remote-debugging-address', 'remote-allow-origins',
+  'inspect', 'inspect-brk', 'inspect-port', 'inspect-publish-uid', 'debug', 'debug-brk',
+  'no-sandbox', 'disable-web-security', 'disable-site-isolation-trials', 'allow-file-access-from-files',
+  'allow-running-insecure-content', 'ignore-certificate-errors', 'js-flags', 'disable-features',
+  'enable-features', 'proxy-server', 'proxy-pac-url', 'host-resolver-rules', 'host-rules',
+  'load-extension', 'disable-gpu-sandbox', 'utility-and-browser', 'renderer-cmd-prefix',
+  'gpu-launcher', 'utility-cmd-prefix', 'browser-subprocess-path'
+]
+
+// argv as Windows hands it over. Chromium on Windows accepts --x, -x and /x,
+// in any case, with or without an = value.
+export function findDangerousSwitch(argv) {
+  for (const raw of argv.slice(1)) {
+    const m = /^(?:--?|\/)([a-z0-9-]+)(=.*)?$/i.exec(String(raw))
+    if (m && DANGEROUS_SWITCHES.includes(m[1].toLowerCase())) return m[1]
+  }
+  return null
+}
+
 export function sanitizeImportedRecipes(parsed, normalizeUnit) {
   const list = Array.isArray(parsed) ? parsed : [parsed]
   return list
