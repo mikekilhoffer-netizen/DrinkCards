@@ -1,0 +1,52 @@
+{
+  "name": "drinkcards",
+  "version": "1.0.0",
+  "description": "Drink Recipe Card Manager",
+  "main": "out/main/index.js",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "dist": "electron-vite build && set CSC_IDENTITY_AUTO_DISCOVERY=false&& electron-builder",
+    "pack": "electron-vite build && set CSC_IDENTITY_AUTO_DISCOVERY=false&& electron-builder --dir"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.105.0",
+    "@electron-toolkit/utils": "^3.0.0",
+    "sql.js": "^1.12.0"
+  },
+  "devDependencies": {
+    "@electron-toolkit/preload": "^3.0.1",
+    "@vitejs/plugin-react": "^4.3.1",
+    "electron": "^32.0.0",
+    "electron-builder": "^25.0.0",
+    "electron-vite": "^2.3.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "vite": "^5.4.0"
+  },
+  "build": {
+    "appId": "com.drinkcards",
+    "productName": "Drink Cards",
+    "copyright": "Copyright © 2024",
+    "directories": {
+      "buildResources": "resources",
+      "output": "release"
+    },
+    "files": [
+      "out/**/*",
+      "!**/*.map"
+    ],
+    "win": {
+      "target": [
+        { "target": "nsis", "arch": ["x64"] }
+      ],
+      "artifactName": "${productName}-Setup-${version}.exe"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "deleteAppDataOnUninstall": false
+    }
+  }
+}
