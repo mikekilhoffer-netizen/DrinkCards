@@ -16,6 +16,10 @@ The host is the same Cloudflare R2 bucket ScanLedger uses (custom domain
 
 ## Every release
 
+0. **Log in for this release only:** `npx wrangler login` (browser click).
+   The login can write to the whole Cloudflare account, so it is not left on
+   the machine between releases - see step 7.
+
 1. **Bump `version` in `package.json`.** That number is what every installed
    copy compares itself against. Same version = nobody is offered the update.
 2. **Add a line to `CHANGELOG.md`.**
@@ -28,12 +32,13 @@ The host is the same Cloudflare R2 bucket ScanLedger uses (custom domain
    Runs the tests, builds, packages the installer into `dist-desktop/`, then
    copies exactly what belongs on the host into `release/`. It refuses if
    `latest.yml` and `package.json` disagree on the version.
-4. **Upload the contents of `release/`** into the bucket's `drinkcards/`
+4. **Upload the contents of `release/`** (e.g. `npx wrangler r2 object put "scanledger-updates/drinkcards/<file>" --file "release/<file>" --remote`) into the bucket's `drinkcards/`
    folder, keeping file names exactly. **Installer and blockmap first,
    `latest.yml` last** — so no machine is told about an installer that isn't
    there yet. Overwrite the old `latest.yml`; older installers can stay.
 5. **Check from the app**: Settings → Software Updates → *Check for updates*.
 6. **Commit and push**, and tag it: `git tag v1.2.0 && git push --tags`.
+7. **Log out:** `npx wrangler logout`.
 
 ---
 
